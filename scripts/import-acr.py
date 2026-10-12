@@ -45,9 +45,12 @@ def main():
             local_image = image_name(agent)
             target = f"{server}/{local_image}"
             disk_name = local_image.replace(":", "-")
-            existing = [d for d in client.list_disk_images() if d.name == disk_name]
+            existing = [d for d in client.list_disk_images()
+                        if (d.name or d.labels.get("name")) == disk_name]
             if existing:
-                print(f"Disk {disk_name} already exists: {existing[0].id}; inspect it before retrying.", flush=True)
+                if getattr(existing[0].status, "state", None) != "Ready":
+                    raise RuntimeError(f"Disk {disk_name} exists but is not Ready; inspect it before retrying.")
+                print(f"Disk {disk_name} is already Ready: {existing[0].id}", flush=True)
                 continue
             login = az(subscription, "acr", "login", "--name", args.registry, "--expose-token")
             with tempfile.TemporaryDirectory(prefix="foundry-acr-") as config:
@@ -70,8 +73,8 @@ def main():
                     username="00000000-0000-0000-0000-000000000000", token=login["accessToken"]),
                 polling_timeout=1200,
             ).result()
-            result = {"id": disk.id, "name": disk.name, "image": immutable,
-                      "status": str(getattr(disk, "status", getattr(disk, "state", "unknown")))}
+            result = {"id": disk.id, "name": disk.name or disk.labels.get("name"), "image": immutable,
+                      "status": getattr(disk.status, "state", "unknown")}
             (evidence / f"{agent}-disk.json").write_text(json.dumps(result, indent=2) + "\n")
             print(json.dumps(result), flush=True)
     finally:
