@@ -120,6 +120,8 @@ With `.env.local` loaded and the SDK dependencies installed:
 
 The starter reuses sandboxes by image/version label, or creates one from each Ready disk. Each gets 2 vCPU and 4 GiB memory, outbound access to the configured Foundry hosts, and **idle suspension disabled**. They continue consuming resources until stopped. No public application port is exposed.
 
+In the portal terminal, run `/workspace/start-codex` or `/workspace/start-claude` in the corresponding sandbox. These helpers select the non-root agent user and supply the same runtime configuration used by the verifier.
+
 Credentials are uploaded through the authenticated file API into `/dev/shm/foundry-token`, owned by the non-root agent with mode `0600`. Run the starter again to refresh expired credentials or after restarting a sandbox. Tokens are short-lived and active CLI sessions do not refresh automatically. Do not snapshot a sandbox containing credentials: memory snapshots can retain them too.
 
 The verifier asks each model to execute Python, calculate a random challenge's SHA-256 and a sum, and write a JSON file. It then independently reads the file through the ACA API and compares exact expected values. Private sandbox IDs and execution logs remain in ignored `artifacts/` files.

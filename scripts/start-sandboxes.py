@@ -2,6 +2,7 @@
 """Create or resume both Foundry sandboxes and refresh their short-lived tokens."""
 import json
 import os
+import shlex
 from pathlib import Path
 
 from azure.containerapps.sandbox import (
@@ -68,6 +69,15 @@ def main():
             result = sandbox.exec("test -r /dev/shm/foundry-token && id && stat -c '%U %a' /dev/shm/foundry-token")
             if result.exit_code:
                 raise RuntimeError("Token file is not readable by the agent")
+            # Portal terminals open as root. Provide an explicit non-root entry
+            # point with the same configuration used by the verified SDK runs.
+            assignments = [f"{k}={os.environ[k]}" for k in RUNTIME_KEYS if k in os.environ]
+            assignments += ["HOME=/home/agent", "FOUNDRY_TOKEN_FILE=/dev/shm/foundry-token"]
+            launch = shlex.join(["env", *assignments, f"/usr/local/bin/{agent}"])
+            helper = ("#!/bin/sh\nset -eu\ncd /workspace\n"
+                      f'if [ "$(id -u)" = 0 ]; then exec runuser -u agent -- {launch} "$@"; fi\n'
+                      f'exec {launch} "$@"\n')
+            sandbox.write_file(f"/workspace/start-{agent}", helper, mode="0755")
             print(agent, state.id, state.state, result, flush=True)
     finally:
         client.close()
