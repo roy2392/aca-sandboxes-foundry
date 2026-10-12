@@ -108,6 +108,22 @@ This creates registry tags and private ACA disks. It never creates a registry or
 
 Wait for **Ready**, record the disk IDs, then follow the [ACA disk-image guide](https://sandboxes.azure.com/docs/sandboxes/disk-images) to create a sandbox. Supply the same non-secret runtime configuration and a fresh token. Validate startup, egress/TLS, model access and an actual coding task before relying on the cloud deployment.
 
+### Start and verify both sandboxes
+
+With `.env.local` loaded and the SDK dependencies installed:
+
+```bash
+.venv/bin/python scripts/start-sandboxes.py
+.venv/bin/python scripts/verify-sandboxes.py --agent codex
+.venv/bin/python scripts/verify-sandboxes.py --agent claude
+```
+
+The starter reuses sandboxes by image/version label, or creates one from each Ready disk. Each gets 2 vCPU and 4 GiB memory, outbound access to the configured Foundry hosts, and **idle suspension disabled**. They continue consuming resources until stopped. No public application port is exposed.
+
+Credentials are uploaded through the authenticated file API into `/dev/shm/foundry-token`, owned by the non-root agent with mode `0600`. Run the starter again to refresh expired credentials or after restarting a sandbox. Tokens are short-lived and active CLI sessions do not refresh automatically. Do not snapshot a sandbox containing credentials: memory snapshots can retain them too.
+
+The verifier asks each model to execute Python, calculate a random challenge's SHA-256 and a sum, and write a JSON file. It then independently reads the file through the ACA API and compares exact expected values. Private sandbox IDs and execution logs remain in ignored `artifacts/` files.
+
 ## Authentication and validation
 
 - Entra tokens only. The launcher rejects missing, malformed, expired, wrong-tenant and wrong-audience tokens. Foundry verifies signatures and RBAC.
