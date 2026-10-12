@@ -1,0 +1,11 @@
+.env
+.env.*
+!.env.example
+artifacts/
+__pycache__/
+*.pyc
+*.token
+artifacts-build.log
+images/*/vendor/node_modules/
+.local/
+.DS_Store

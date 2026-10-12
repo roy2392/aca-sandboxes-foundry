@@ -1,0 +1,14 @@
+model = "__CODEX_MODEL__"
+model_provider = "azure_foundry"
+approval_policy = "on-request"
+sandbox_mode = "workspace-write"
+
+[model_providers.azure_foundry]
+name = "Microsoft Foundry"
+base_url = "https://__FOUNDRY_RESOURCE__.openai.azure.com/openai/v1"
+env_key = "AZURE_FOUNDRY_AUTH_TOKEN"
+wire_api = "responses"
+requires_openai_auth = false
+
+[sandbox_workspace_write]
+network_access = false
