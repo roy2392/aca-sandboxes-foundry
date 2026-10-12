@@ -8,7 +8,9 @@ COPY codex/vendor/ /opt/codex/
 COPY common/launch.py /opt/foundry/launch.py
 COPY codex/codex /usr/local/bin/codex
 COPY codex/config.toml /opt/foundry/codex-config.toml
-RUN chmod 0755 /usr/local/bin/codex
+RUN chmod 0755 /usr/local/bin/codex \
+    && mkdir -p /opt/codex/node_modules/.bin \
+    && ln -sf ../@openai/codex/bin/codex.js /opt/codex/node_modules/.bin/codex
 ENV HOME=/home/agent
 USER agent
 WORKDIR /workspace

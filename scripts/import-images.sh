@@ -11,7 +11,18 @@ for agent in codex claude; do
   context="artifacts/import-context/$agent"
   mkdir -p "$context/common" "$context/$agent"
   cp images/common/launch.py "$context/common/launch.py"
-  cp -R "images/$agent/." "$context/$agent/"
+  # ACA's source uploader rejects symlinks. Dereference npm's .bin links in
+  # this generated context; the Dockerfiles recreate them inside Linux.
+  python3 - "$agent" "$context" <<'PY'
+import shutil
+import sys
+from pathlib import Path
+agent, context = sys.argv[1:]
+target = Path(context) / agent
+if target.exists():
+    shutil.rmtree(target)
+shutil.copytree(Path("images") / agent, target, symlinks=False)
+PY
   cp "images/$agent/Dockerfile" "$context/Dockerfile"
   python3 scripts/aca-scoped.py sandboxgroup disk create \
     --source "$context" --name "${IMAGE_PREFIX:-foundry}-$agent-${IMAGE_TAG:-20261012.2}" \

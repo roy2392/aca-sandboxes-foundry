@@ -94,6 +94,18 @@ This uploads the prepared source contexts and builds two private disk images. It
 
 The scoped wrapper pins resource routing and Azure token selection to your subscription. It addresses wrong-tenant token behavior observed with ACA CLI `1.0.0-preview.4`, without changing global defaults or permissions.
 
+### Alternative: import through an existing private registry
+
+If a large source upload fails, publish the locally built images to your existing ACR and import their immutable digests:
+
+```bash
+python3 -m venv .venv
+.venv/bin/pip install -r requirements-import.txt
+.venv/bin/python scripts/import-acr.py --registry YOUR_EXISTING_ACR_NAME
+```
+
+This creates registry tags and private ACA disks. It never creates a registry or changes access roles. Registry credentials are obtained through your Azure login, used in memory and a temporary Docker configuration, and removed from disk when that configuration closes. Existing disk names are skipped and should be inspected before reuse. Failed source uploads should be reconciled using the exact correlation label reported by the ACA CLI before retrying.
+
 Wait for **Ready**, record the disk IDs, then follow the [ACA disk-image guide](https://sandboxes.azure.com/docs/sandboxes/disk-images) to create a sandbox. Supply the same non-secret runtime configuration and a fresh token. Validate startup, egress/TLS, model access and an actual coding task before relying on the cloud deployment.
 
 ## Authentication and validation
@@ -111,7 +123,7 @@ Wait for **Ready**, record the disk IDs, then follow the [ACA disk-image guide](
 | `images/` | Dockerfiles, launchers, token checks and pinned CLI package locks |
 | `scripts/build.sh` | Build both Linux images |
 | `scripts/run-local.py`, `scripts/verify.py` | Scoped authentication and verification |
-| `scripts/aca-scoped.py`, `scripts/import-images.sh` | Explicit Azure disk import |
+| `scripts/aca-scoped.py`, `scripts/import-images.sh`, `scripts/import-acr.py` | Explicit Azure disk import, including an existing-ACR alternative |
 | `tests/` | Authentication/configuration regression tests |
 
 ## References

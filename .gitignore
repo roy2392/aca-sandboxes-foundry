@@ -9,3 +9,4 @@ artifacts-build.log
 images/*/vendor/node_modules/
 .local/
 .DS_Store
+.venv/

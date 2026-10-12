@@ -8,7 +8,9 @@ COPY claude/vendor/ /opt/claude/
 RUN node /opt/claude/node_modules/@anthropic-ai/claude-code/install.cjs
 COPY common/launch.py /opt/foundry/launch.py
 COPY claude/claude /usr/local/bin/claude
-RUN chmod 0755 /usr/local/bin/claude
+RUN chmod 0755 /usr/local/bin/claude \
+    && mkdir -p /opt/claude/node_modules/.bin \
+    && ln -sf ../@anthropic-ai/claude-code/bin/claude.exe /opt/claude/node_modules/.bin/claude
 ENV HOME=/home/agent \
     CLAUDE_CODE_USE_FOUNDRY=1 \
     DISABLE_AUTOUPDATER=1 CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1
